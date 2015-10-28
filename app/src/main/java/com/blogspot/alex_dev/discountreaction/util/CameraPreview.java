@@ -6,6 +6,8 @@ import android.util.Log;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 
+import com.blogspot.alex_dev.discountreaction.activity.MeasureSoundActivity;
+
 import java.io.IOException;
 
 /** A basic Camera preview class */
@@ -31,7 +33,7 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
         try {
             if (mCamera == null) {
                 System.out.println("null");
-                mCamera = Camera.open(Camera.CameraInfo.CAMERA_FACING_FRONT);
+                mCamera = MeasureSoundActivity.getCameraInstance();
 
             }
             mCamera.setPreviewDisplay(holder);

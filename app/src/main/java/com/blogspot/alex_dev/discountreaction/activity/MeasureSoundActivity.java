@@ -9,9 +9,13 @@ import android.view.View;
 import android.view.animation.RotateAnimation;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
+import android.widget.ScrollView;
 
 import com.blogspot.alex_dev.discountreaction.R;
 import com.blogspot.alex_dev.discountreaction.util.CameraPreview;
+
+import java.util.List;
 
 public class MeasureSoundActivity extends AppCompatActivity {
     private ImageView arrowImageView;
@@ -31,8 +35,28 @@ public class MeasureSoundActivity extends AppCompatActivity {
         // Create our Preview view and set it as the content of our activity.
         CameraPreview mPreview = new CameraPreview(this, mCamera);
         FrameLayout preview = (FrameLayout) findViewById(R.id.camera_preview);
-        preview.addView(mPreview);
 
+        List<Camera.Size> tmpList = mCamera.getParameters().getSupportedPreviewSizes();
+        LinearLayout.LayoutParams ll = (LinearLayout.LayoutParams) preview.getLayoutParams();
+        ll.width = tmpList.get(0).width;
+        ll.height = tmpList.get(0).height;
+
+        int screenWidth = 1920;
+        int screenHeight = 1080;
+
+        if (ll.height < screenHeight){
+            int scale = screenHeight - ll.height;
+            ll.height += scale;
+            ll.width += scale;
+        }
+
+        preview.setLayoutParams(ll);
+
+        ScrollView scrollView = (ScrollView)findViewById(R.id.scrollView);
+        //scrollView.invalidate();
+        //todo fix scale bug
+
+        preview.addView(mPreview);
     }
 
     /** A safe way to get an instance of the Camera object. */
