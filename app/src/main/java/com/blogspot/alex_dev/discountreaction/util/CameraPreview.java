@@ -2,6 +2,8 @@ package com.blogspot.alex_dev.discountreaction.util;
 
 import android.content.Context;
 import android.hardware.Camera;
+import android.media.CamcorderProfile;
+import android.media.MediaRecorder;
 import android.util.Log;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
@@ -14,6 +16,7 @@ import java.io.IOException;
 public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback {
     private SurfaceHolder mHolder;
     private Camera mCamera;
+    public MediaRecorder mrec = new MediaRecorder();
     private static final String TAG = "Camera_log";
 
     public CameraPreview(Context context, Camera camera) {
@@ -24,9 +27,10 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
         // underlying surface is created and destroyed.
         mHolder = getHolder();
         mHolder.addCallback(this);
-        // deprecated setting, but required on Android versions prior to 3.0
-        mHolder.setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
-    }
+        //mCamera.getParameters().setPreviewSize(512, 512    );
+    // deprecated setting, but required on Android versions prior to 3.0
+    mHolder.setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
+}
 
     public void surfaceCreated(SurfaceHolder holder) {
         // The Surface has been created, now tell the camera where to draw the preview.
@@ -44,7 +48,7 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
     }
 
     public void surfaceDestroyed(SurfaceHolder holder) {
-        // empty. Take care of releasing the Camera preview in your activity.
+        //Take care of releasing the Camera preview in your activity.
         mCamera.stopPreview();
         mCamera.release();
         mCamera = null;
@@ -77,6 +81,48 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
 
         } catch (Exception e){
             Log.d(TAG, "Error starting camera preview: " + e.getMessage());
+        }
+    }
+
+
+    public void startRecording() throws IOException
+    {
+        mrec = new MediaRecorder();  // Works well
+        mCamera.unlock();
+
+        mrec.setCamera(mCamera);
+
+        mrec.setPreviewDisplay(mHolder.getSurface());
+        mrec.setVideoSource(MediaRecorder.VideoSource.CAMERA);
+        mrec.setAudioSource(MediaRecorder.AudioSource.MIC);
+
+        mrec.setProfile(CamcorderProfile.get(CamcorderProfile.QUALITY_HIGH));
+        mrec.setPreviewDisplay(mHolder.getSurface());
+        mrec.setOutputFile("/sdcard/zzzz.3gp");
+
+        mrec.prepare();
+        mrec.start();
+    }
+
+    public void stopRecording() {
+        mrec.stop();
+        mrec.release();
+        mCamera.release();
+    }
+
+    private void releaseMediaRecorder(){
+        if (mrec != null) {
+            mrec.reset();   // clear recorder configuration
+            mrec.release(); // release the recorder object
+            mrec = null;
+            mCamera.lock();           // lock camera for later use
+        }
+    }
+
+    private void releaseCamera(){
+        if (mCamera != null){
+            mCamera.release();        // release the camera for other applications
+            mCamera = null;
         }
     }
 }

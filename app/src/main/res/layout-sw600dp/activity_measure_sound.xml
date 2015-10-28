@@ -61,18 +61,13 @@
         android:layout_alignParentTop="true"
         android:layout_toLeftOf="@+id/separatorView"
         android:layout_toStartOf="@+id/separatorView"
-        android:fillViewport="true">
+        android:fillViewport="true"
+        android:scrollbars="none">
 
         <LinearLayout
+            android:id="@+id/cameraPreviewLinLayout"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:gravity="center_horizontal"
-            android:orientation="vertical">
-
-            <FrameLayout
-                android:id="@+id/camera_preview"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent" />
-        </LinearLayout>
+            android:layout_height="match_parent"
+            android:orientation="vertical" />
     </ScrollView>
 </RelativeLayout>
