@@ -117,7 +117,7 @@ public class MeasureReactionActivity extends AppCompatActivity {
         ((AudioManager) getApplicationContext().getSystemService(Context.AUDIO_SERVICE)).setStreamMute(AudioManager.STREAM_VOICE_CALL, true);
     }
 
-    private void enableAllAudio() {
+    public void enableAllAudio() {
         // re-enable sound after recording.
         ((AudioManager) getApplicationContext().getSystemService(Context.AUDIO_SERVICE)).setStreamMute(AudioManager.STREAM_ALARM, false);
         ((AudioManager) getApplicationContext().getSystemService(Context.AUDIO_SERVICE)).setStreamMute(AudioManager.STREAM_DTMF, false);
@@ -235,11 +235,12 @@ public class MeasureReactionActivity extends AppCompatActivity {
             if (isDbLevelReached()) {
                 isDbMeasuring = false;
                 preview.stopRecording();
-                //enableAllAudio();
 
                 Intent intent = new Intent(getApplicationContext(), ResultActivity.class);
                 intent.putExtra(ResultActivity.RESULT_ID, ResultActivity.SUCCESS);
                 startActivity(intent);
+
+                enableAllAudio();
                 finish();
             }
         }
@@ -285,11 +286,12 @@ public class MeasureReactionActivity extends AppCompatActivity {
             if (!isDbLevelReached()) {
                 isDbMeasuring = false;
                 preview.stopRecording();
-                //enableAllAudio();
 
                 Intent intent = new Intent(getApplicationContext(), ResultActivity.class);
                 intent.putExtra(ResultActivity.RESULT_ID, ResultActivity.FAILURE);
                 startActivity(intent);
+
+                enableAllAudio();
                 finish();
             }
         }
