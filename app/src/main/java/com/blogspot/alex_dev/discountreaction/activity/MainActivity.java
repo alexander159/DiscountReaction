@@ -18,7 +18,7 @@ public class MainActivity extends AppCompatActivity {
         startBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent intent = new Intent(getApplicationContext(), MeasureSoundActivity.class);
+                Intent intent = new Intent(getApplicationContext(), MeasureReactionActivity.class);
                 startActivity(intent);
                 finish();
             }

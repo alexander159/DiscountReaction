@@ -30,7 +30,7 @@
         </activity>
 
         <activity
-            android:name=".activity.MeasureSoundActivity"
+            android:name=".activity.MeasureReactionActivity"
             android:configChanges="keyboardHidden|orientation|screenSize"
             android:screenOrientation="landscape" />
     </application>
