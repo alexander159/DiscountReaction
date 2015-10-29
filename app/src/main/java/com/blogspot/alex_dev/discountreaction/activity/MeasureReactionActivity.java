@@ -4,13 +4,11 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.hardware.Camera;
-import android.media.MediaRecorder;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.v7.app.AppCompatActivity;
 import android.util.DisplayMetrics;
-import android.util.Log;
 import android.view.animation.RotateAnimation;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -30,10 +28,8 @@ public class MeasureReactionActivity extends AppCompatActivity {
     private static double mEMA = 0.0;
     private ImageView arrowImageView;
     private TextView timeCounterTextView;
-    private MediaRecorder mRecorder;
     private CameraPreview preview;
-    private boolean isMeasuring;
-    private MeterArrowTask mTask;
+    private boolean isDbMeasuring;
     private float lastDegree;
     private boolean isDbLevelReached;
     private int timeLeft;
@@ -101,23 +97,12 @@ public class MeasureReactionActivity extends AppCompatActivity {
             @Override
             public void run() {
                 preview.startRecording();
-                new TimerCountdown().execute();
+                isDbMeasuring = true;
+                new TimerCountdown().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+                new DbMeasuringTask().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
             }
         }, 1000); //test
-
-        //startMeterTask();
     }
-
-    //
-//    public void onResume() {
-//        super.onResume();
-//        startRecorder();
-//    }
-//
-//    public void onPause() {
-//        super.onPause();
-//        stopRecorder();
-//    }
 
     private double dbToDegree(double dbVal) {
         //input val in the range -90 .. 0 (0 is the highest value)
@@ -136,61 +121,48 @@ public class MeasureReactionActivity extends AppCompatActivity {
         lastDegree = degree;
     }
 
-
-    public void startMeterTask() {
-        startRecorder();
-        isMeasuring = true;
-        mTask = new MeterArrowTask();
-        mTask.execute();
-    }
-
-    public void stopMeterTask() {
-        stopRecorder();
-        isMeasuring = false;
-        mTask = null;
-    }
-
-    public void startRecorder() {
-        if (mRecorder == null) {
-            mRecorder = new MediaRecorder();
-            mRecorder.setAudioSource(MediaRecorder.AudioSource.MIC);
-            mRecorder.setOutputFormat(MediaRecorder.OutputFormat.THREE_GPP);
-            mRecorder.setAudioEncoder(MediaRecorder.AudioEncoder.AMR_NB);
-            mRecorder.setOutputFile("/dev/null");
-            try {
-                mRecorder.prepare();
-            } catch (java.io.IOException ioe) {
-                Log.e(TAG, "IOException: " + android.util.Log.getStackTraceString(ioe));
-
-            } catch (java.lang.SecurityException e) {
-                Log.e(TAG, "SecurityException: " + android.util.Log.getStackTraceString(e));
-            }
-            try {
-                mRecorder.start();
-            } catch (java.lang.SecurityException e) {
-                Log.e(TAG, "SecurityException: " + android.util.Log.getStackTraceString(e));
-            }
-
-            //mEMA = 0.0;
-        }
-
-    }
-
-    public void stopRecorder() {
-        if (mRecorder != null) {
-            mRecorder.stop();
-            mRecorder.release();
-            mRecorder = null;
-        }
-    }
+//    public void startRecorder() {
+//        if (mRecorder == null) {
+//            mRecorder = new MediaRecorder();
+//            mRecorder.setAudioSource(MediaRecorder.AudioSource.MIC);
+//            mRecorder.setOutputFormat(MediaRecorder.OutputFormat.THREE_GPP);
+//            mRecorder.setAudioEncoder(MediaRecorder.AudioEncoder.AMR_NB);
+//            mRecorder.setOutputFile("/dev/null");
+//            try {
+//                mRecorder.prepare();
+//            } catch (java.io.IOException ioe) {
+//                Log.e(TAG, "IOException: " + android.util.Log.getStackTraceString(ioe));
+//
+//            } catch (java.lang.SecurityException e) {
+//                Log.e(TAG, "SecurityException: " + android.util.Log.getStackTraceString(e));
+//            }
+//            try {
+//                mRecorder.start();
+//            } catch (java.lang.SecurityException e) {
+//                Log.e(TAG, "SecurityException: " + android.util.Log.getStackTraceString(e));
+//            }
+//
+//            //mEMA = 0.0;
+//        }
+//
+//    }
+//
+//    public void stopRecorder() {
+//        if (mRecorder != null) {
+//            mRecorder.stop();
+//            mRecorder.release();
+//            mRecorder = null;
+//        }
+//    }
 
     public double soundDb(double ampl) {
+        //return  20 * Math.log10(getAmplitudeEMA() / ampl);
         return 20 * Math.log10(getAmplitude() / ampl);
     }
 
     public double getAmplitude() {
-        if (mRecorder != null)
-            return (mRecorder.getMaxAmplitude());
+        if (preview.getMediaRecorder() != null)
+            return (preview.getMediaRecorder().getMaxAmplitude());
         else
             return 0;
     }
@@ -209,7 +181,7 @@ public class MeasureReactionActivity extends AppCompatActivity {
         return isDbLevelReached;
     }
 
-    class MeterArrowTask extends AsyncTask<Void, Integer, String> {
+    class DbMeasuringTask extends AsyncTask<Void, Integer, String> {
         @Override
         protected void onPreExecute() {
             super.onPreExecute();
@@ -217,7 +189,7 @@ public class MeasureReactionActivity extends AppCompatActivity {
 
         @Override
         protected String doInBackground(Void... params) {
-            while (isMeasuring) {
+            while (isDbMeasuring) {
                 publishProgress((int) (dbToDegree(soundDb(65535.0))));
                 try {
                     TimeUnit.MILLISECONDS.sleep(100);
@@ -270,6 +242,7 @@ public class MeasureReactionActivity extends AppCompatActivity {
             timeCounterTextView.setText(String.valueOf(values[0]));
             if (isDbLevelReached()) {
                 preview.stopRecording();
+                isDbMeasuring = false;
                 Intent intent = new Intent(getApplicationContext(), ResultActivity.class);
                 intent.putExtra(ResultActivity.RESULT_ID, ResultActivity.SUCCESS);
                 startActivity(intent);
@@ -284,6 +257,7 @@ public class MeasureReactionActivity extends AppCompatActivity {
             //level success wasn't reached
             if (!isDbLevelReached()) {
                 preview.stopRecording();
+                isDbMeasuring = false;
                 Intent intent = new Intent(getApplicationContext(), ResultActivity.class);
                 intent.putExtra(ResultActivity.RESULT_ID, ResultActivity.FAILURE);
                 startActivity(intent);

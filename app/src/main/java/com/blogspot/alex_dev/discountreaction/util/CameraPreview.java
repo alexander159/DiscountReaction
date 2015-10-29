@@ -19,14 +19,17 @@ import java.util.Date;
 
 public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback {
     private static final String TAG = "CameraPreview";
-    public MediaRecorder mrec = new MediaRecorder();
-    boolean isRecording = false;
+    public MediaRecorder mrec;
+    private boolean isRecording;
     private SurfaceHolder surfaceHolder;
     private Camera camera;
 
     public CameraPreview(Context context) {
         super(context);
         camera = getCameraInstance();
+
+        mrec = new MediaRecorder();
+        isRecording = false;
 
         // Install a SurfaceHolder.Callback so we get notified when the underlying surface is created and destroyed.
         surfaceHolder = getHolder();
@@ -183,5 +186,9 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
 
     public Camera getCamera() {
         return camera;
+    }
+
+    public MediaRecorder getMediaRecorder() {
+        return mrec;
     }
 }
