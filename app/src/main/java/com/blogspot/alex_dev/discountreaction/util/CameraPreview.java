@@ -2,7 +2,6 @@ package com.blogspot.alex_dev.discountreaction.util;
 
 import android.content.Context;
 import android.hardware.Camera;
-import android.media.CamcorderProfile;
 import android.media.MediaRecorder;
 import android.util.Log;
 import android.view.SurfaceHolder;
@@ -47,6 +46,14 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
         } catch (IOException e) {
             Log.d(TAG, "Error setting camera preview: " + e.getMessage());
         }
+    }
+
+    public Camera getmCamera() {
+        return mCamera;
+    }
+
+    public void setmCamera(Camera mCamera) {
+        this.mCamera = mCamera;
     }
 
     public void surfaceDestroyed(SurfaceHolder holder) {
@@ -99,10 +106,11 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
 
         // start preview with new settings
         try {
-            Camera.Parameters parameters = mCamera.getParameters();
-            Camera.Size size = getBestPreviewSize(w, h);
-            parameters.setPreviewSize(size.width, size.height);
-            mCamera.setParameters(parameters);
+//            Camera.Parameters parameters = mCamera.getParameters();
+//            Camera.Size size = getBestPreviewSize(w, h);
+//   //         parameters.setPreviewSize(size.width, size.height);
+//            parameters.setPreviewSize(352, 288);
+//            mCamera.setParameters(parameters);
 
             mCamera.setPreviewDisplay(mHolder);
             mCamera.startPreview();
@@ -113,43 +121,43 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
     }
 
 
-    public void startRecording() throws IOException {
-        mrec = new MediaRecorder();  // Works well
-        mCamera.unlock();
-
-        mrec.setCamera(mCamera);
-
-        mrec.setPreviewDisplay(mHolder.getSurface());
-        mrec.setVideoSource(MediaRecorder.VideoSource.CAMERA);
-        mrec.setAudioSource(MediaRecorder.AudioSource.MIC);
-
-        mrec.setProfile(CamcorderProfile.get(CamcorderProfile.QUALITY_HIGH));
-        mrec.setPreviewDisplay(mHolder.getSurface());
-        mrec.setOutputFile("/sdcard/zzzz.3gp");
-
-        mrec.prepare();
-        mrec.start();
-    }
-
-    public void stopRecording() {
-        mrec.stop();
-        mrec.release();
-        mCamera.release();
-    }
-
-    private void releaseMediaRecorder() {
-        if (mrec != null) {
-            mrec.reset();   // clear recorder configuration
-            mrec.release(); // release the recorder object
-            mrec = null;
-            mCamera.lock();           // lock camera for later use
-        }
-    }
-
-    private void releaseCamera() {
-        if (mCamera != null) {
-            mCamera.release();        // release the camera for other applications
-            mCamera = null;
-        }
-    }
+//    public void startRecording() throws IOException {
+//        mrec = new MediaRecorder();  // Works well
+//        mCamera.unlock();
+//
+//        mrec.setCamera(mCamera);
+//
+//        mrec.setPreviewDisplay(mHolder.getSurface());
+//        mrec.setVideoSource(MediaRecorder.VideoSource.CAMERA);
+//        mrec.setAudioSource(MediaRecorder.AudioSource.MIC);
+//
+//        mrec.setProfile(CamcorderProfile.get(CamcorderProfile.QUALITY_HIGH));
+//        mrec.setPreviewDisplay(mHolder.getSurface());
+//        mrec.setOutputFile("/sdcard/zzzz.3gp");
+//
+//        mrec.prepare();
+//        mrec.start();
+//    }
+//
+//    public void stopRecording() {
+//        mrec.stop();
+//        mrec.release();
+//        mCamera.release();
+//    }
+//
+//    private void releaseMediaRecorder() {
+//        if (mrec != null) {
+//            mrec.reset();   // clear recorder configuration
+//            mrec.release(); // release the recorder object
+//            mrec = null;
+//            mCamera.lock();           // lock camera for later use
+//        }
+//    }
+//
+//    private void releaseCamera() {
+//        if (mCamera != null) {
+//            mCamera.release();        // release the camera for other applications
+//            mCamera = null;
+//        }
+//    }
 }
