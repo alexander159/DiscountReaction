@@ -96,7 +96,7 @@ public class MeasureSoundActivity extends AppCompatActivity {
         return c; // returns null if camera is unavailable
     }
 
-    private double dbToDegree(double dbVal){
+    private double dbToDegree(double dbVal) {
         //input val in the range -90 .. 0 (0 is the highest value)
         //2 degree per each value
         return (dbVal + 90) * 2;
@@ -210,19 +210,4 @@ public class MeasureSoundActivity extends AppCompatActivity {
             super.onPostExecute(s);
         }
     }
-
-//    @TargetApi(Build.VERSION_CODES.KITKAT)
-//    @Override
-//    public void onWindowFocusChanged(boolean hasFocus) {
-//        super.onWindowFocusChanged(hasFocus);
-//        if (hasFocus) {
-//            getWindow().getDecorView().setSystemUiVisibility(
-//                    View.SYSTEM_UI_FLAG_LAYOUT_STABLE
-//                            | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
-//                            | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
-//                            | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
-//                            | View.SYSTEM_UI_FLAG_FULLSCREEN
-//                            | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY);
-//        }
-//    }
 }

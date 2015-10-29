@@ -12,7 +12,9 @@ import com.blogspot.alex_dev.discountreaction.activity.MeasureSoundActivity;
 
 import java.io.IOException;
 
-/** A basic Camera preview class */
+/**
+ * A basic Camera preview class
+ */
 public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback {
     private SurfaceHolder mHolder;
     private Camera mCamera;
@@ -28,9 +30,9 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
         mHolder = getHolder();
         mHolder.addCallback(this);
         //mCamera.getParameters().setPreviewSize(512, 512    );
-    // deprecated setting, but required on Android versions prior to 3.0
-    mHolder.setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
-}
+        // deprecated setting, but required on Android versions prior to 3.0
+        mHolder.setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
+    }
 
     public void surfaceCreated(SurfaceHolder holder) {
         // The Surface has been created, now tell the camera where to draw the preview.
@@ -54,11 +56,32 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
         mCamera = null;
     }
 
+    private Camera.Size getBestPreviewSize(int width, int height) {
+        Camera.Size result = null;
+        Camera.Parameters p = mCamera.getParameters();
+        for (Camera.Size size : p.getSupportedPreviewSizes()) {
+            if (size.width <= width && size.height <= height) {
+                if (result == null) {
+                    result = size;
+                } else {
+                    int resultArea = result.width * result.height;
+                    int newArea = size.width * size.height;
+
+                    if (newArea > resultArea) {
+                        result = size;
+                    }
+                }
+            }
+        }
+        return result;
+    }
+
+    @Override
     public void surfaceChanged(SurfaceHolder holder, int format, int w, int h) {
         // If your preview can change or rotate, take care of those events here.
         // Make sure to stop the preview before resizing or reformatting it.
 
-        if (mHolder.getSurface() == null){
+        if (mHolder.getSurface() == null) {
             // preview surface does not exist
             return;
         }
@@ -66,7 +89,7 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
         // stop preview before making changes
         try {
             mCamera.stopPreview();
-        } catch (Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
             // ignore: tried to stop a non-existent preview
         }
@@ -76,17 +99,21 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
 
         // start preview with new settings
         try {
+            Camera.Parameters parameters = mCamera.getParameters();
+            Camera.Size size = getBestPreviewSize(w, h);
+            parameters.setPreviewSize(size.width, size.height);
+            mCamera.setParameters(parameters);
+
             mCamera.setPreviewDisplay(mHolder);
             mCamera.startPreview();
 
-        } catch (Exception e){
+        } catch (Exception e) {
             Log.d(TAG, "Error starting camera preview: " + e.getMessage());
         }
     }
 
 
-    public void startRecording() throws IOException
-    {
+    public void startRecording() throws IOException {
         mrec = new MediaRecorder();  // Works well
         mCamera.unlock();
 
@@ -110,7 +137,7 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
         mCamera.release();
     }
 
-    private void releaseMediaRecorder(){
+    private void releaseMediaRecorder() {
         if (mrec != null) {
             mrec.reset();   // clear recorder configuration
             mrec.release(); // release the recorder object
@@ -119,8 +146,8 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
         }
     }
 
-    private void releaseCamera(){
-        if (mCamera != null){
+    private void releaseCamera() {
+        if (mCamera != null) {
             mCamera.release();        // release the camera for other applications
             mCamera = null;
         }
