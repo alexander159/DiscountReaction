@@ -2,16 +2,27 @@ package com.blogspot.alex_dev.discountreaction.util;
 
 import android.content.Context;
 import android.hardware.Camera;
+import android.media.CamcorderProfile;
+import android.media.MediaRecorder;
+import android.os.Environment;
+import android.util.Log;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.widget.Toast;
 
+import com.blogspot.alex_dev.discountreaction.R;
+
+import java.io.File;
 import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback {
+    private static final String TAG = "CameraPreview";
+    public MediaRecorder mrec = new MediaRecorder();
+    boolean isRecording = false;
     private SurfaceHolder surfaceHolder;
     private Camera camera;
-    private static final String TAG = "CameraPreview";
 
     public CameraPreview(Context context) {
         super(context);
@@ -23,6 +34,69 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
         // deprecated setting, but required on Android versions prior to 3.0
         surfaceHolder.setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
     }
+
+    public void startRecording() {
+        if (!isRecording) {
+            try {
+                mrec = new MediaRecorder();  // Works well
+                camera.unlock();
+
+                mrec.setCamera(camera);
+
+                mrec.setPreviewDisplay(surfaceHolder.getSurface());
+                mrec.setVideoSource(MediaRecorder.VideoSource.CAMERA);
+                mrec.setAudioSource(MediaRecorder.AudioSource.MIC);
+                mrec.setProfile(CamcorderProfile.get(CamcorderProfile.QUALITY_480P));
+
+                String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
+                File mediaStorageDir = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM), "Camera");
+
+                if (!mediaStorageDir.exists()) {
+                    if (!mediaStorageDir.mkdirs()) {
+                        Log.d("MyCameraApp", "failed to create directory");
+                    }
+                }
+
+                File f = new File(mediaStorageDir.getPath() + File.separator + "VID_" + timeStamp + ".mp4");
+
+                mrec.setOutputFile(f.getPath());
+
+                mrec.prepare();
+                mrec.start();
+
+                isRecording = true;
+            } catch (Exception e) {
+                e.printStackTrace();
+                mrec.release();
+            }
+        }
+    }
+
+    public void stopRecording() {
+        if (isRecording) {
+            isRecording = false;
+            mrec.stop();
+            mrec.release();
+            //camera.release();
+            mrec = null;
+        }
+    }
+
+//    private void releaseMediaRecorder(){
+//        if (mrec != null) {
+//            mrec.reset();   // clear recorder configuration
+//            mrec.release(); // release the recorder object
+//            mrec = null;
+//            camera.lock();           // lock camera for later use
+//        }
+//    }
+//
+//    private void releaseCamera(){
+//        if (camera != null){
+//            camera.release();        // release the camera for other applications
+//            camera = null;
+//        }
+//    }
 
     /**
      * A safe way to get an instance of the Camera object.
@@ -36,14 +110,16 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
         try {
             c = android.hardware.Camera.open(Camera.CameraInfo.CAMERA_FACING_FRONT);
         } catch (Exception e) {
-            Toast.makeText(getContext(), "Camera is not available (in use or does not exist)", Toast.LENGTH_LONG).show();
+            Toast.makeText(getContext(), getContext().getString(R.string.camera_unavailable), Toast.LENGTH_LONG).show();
             e.printStackTrace();
         }
         return c;
     }
 
+    @Override
     public void surfaceCreated(SurfaceHolder holder) {
         // The Surface has been created, now tell the camera where to draw the preview.
+        holder.setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
         try {
             if (camera == null) {
                 camera = getCameraInstance();
@@ -62,6 +138,16 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
             camera.stopPreview();
             camera.release();
             camera = null;
+        }
+
+        try {
+            if (mrec != null) {
+                mrec.stop();
+                mrec.release();
+                mrec = null;
+            }
+        } catch (IllegalStateException e) {
+            e.printStackTrace();
         }
     }
 

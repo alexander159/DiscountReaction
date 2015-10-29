@@ -24,4 +24,7 @@
 
     <!-- Settings -->
     <string name="settings">Ajustes</string>
+
+    <!-- Camera is not available (in use or does not exist) -->
+    <string name="camera_unavailable">La cámara no está disponible (en uso o no existe)</string>
 </resources>

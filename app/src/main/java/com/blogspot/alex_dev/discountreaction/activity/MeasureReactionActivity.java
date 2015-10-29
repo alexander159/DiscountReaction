@@ -7,6 +7,7 @@ import android.hardware.Camera;
 import android.media.MediaRecorder;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.v7.app.AppCompatActivity;
 import android.util.DisplayMetrics;
 import android.util.Log;
@@ -90,12 +91,26 @@ public class MeasureReactionActivity extends AppCompatActivity {
         RelativeLayout.LayoutParams counterLP = (RelativeLayout.LayoutParams) timeCounterTextView.getLayoutParams();
         counterLP.topMargin = (screenHeight / 10) - (counterLP.height / 2);
         counterLP.leftMargin = (screenWidth / 4) - (counterLP.width / 2);
+    }
 
+    @Override
+    protected void onStart() {
+        super.onStart();
+
+        new Handler().postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                preview.startRecording();
+
+            }
+        }, 50); //test
         new TimerCountdown().execute();
+
+
         //startMeterTask();
     }
 
-//
+    //
 //    public void onResume() {
 //        super.onResume();
 //        startRecorder();
@@ -237,7 +252,6 @@ public class MeasureReactionActivity extends AppCompatActivity {
 
         @Override
         protected Integer doInBackground(Void... params) {
-
             while (timeLeft >= 0) {
                 try {
                     TimeUnit.MILLISECONDS.sleep(1000);
@@ -257,6 +271,7 @@ public class MeasureReactionActivity extends AppCompatActivity {
 
             timeCounterTextView.setText(String.valueOf(values[0]));
             if (isDbLevelReached()) {
+                preview.stopRecording();
                 Intent intent = new Intent(getApplicationContext(), ResultActivity.class);
                 intent.putExtra(ResultActivity.RESULT_ID, ResultActivity.SUCCESS);
                 startActivity(intent);
@@ -270,6 +285,7 @@ public class MeasureReactionActivity extends AppCompatActivity {
 
             //level success wasn't reached
             if (!isDbLevelReached()) {
+                preview.stopRecording();
                 Intent intent = new Intent(getApplicationContext(), ResultActivity.class);
                 intent.putExtra(ResultActivity.RESULT_ID, ResultActivity.FAILURE);
                 startActivity(intent);
