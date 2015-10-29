@@ -21,4 +21,15 @@
         android:layout_marginBottom="200dp"
         android:background="@drawable/btn_start_selector" />
 
+    <TextView
+        android:id="@+id/settingsTextView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignBottom="@+id/startBtn"
+        android:layout_centerHorizontal="true"
+        android:layout_marginBottom="-70dp"
+        android:fontFamily="sans-serif-light"
+        android:text="@string/settings"
+        android:textColor="@android:color/white"
+        android:textSize="30sp" />
 </RelativeLayout>

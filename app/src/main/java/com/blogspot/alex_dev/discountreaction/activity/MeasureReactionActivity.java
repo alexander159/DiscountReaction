@@ -1,6 +1,8 @@
 package com.blogspot.alex_dev.discountreaction.activity;
 
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.hardware.Camera;
 import android.media.MediaRecorder;
 import android.os.AsyncTask;
@@ -16,6 +18,7 @@ import android.widget.TextView;
 
 import com.blogspot.alex_dev.discountreaction.R;
 import com.blogspot.alex_dev.discountreaction.util.CameraPreview;
+import com.blogspot.alex_dev.discountreaction.util.Constants;
 
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -34,6 +37,8 @@ public class MeasureReactionActivity extends AppCompatActivity {
     private boolean isDbLevelReached;
     private int timeLeft;
 
+    private int dbTopValue;     //decibels maximum value to win
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -47,6 +52,9 @@ public class MeasureReactionActivity extends AppCompatActivity {
         lastDegree = 0f;
         isDbLevelReached = false;
         moveMeterArrow(lastDegree);
+
+        SharedPreferences sPref = getSharedPreferences(Constants.SHARED_PREF_FILENAME, Context.MODE_PRIVATE);
+        dbTopValue = sPref.getInt(Constants.SHARED_PREF_DB_VALUE, -1);
 
         // Create our Preview view and set it as the content of our activity.
         preview = new CameraPreview(this);
@@ -80,7 +88,7 @@ public class MeasureReactionActivity extends AppCompatActivity {
 
         //center counter
         RelativeLayout.LayoutParams counterLP = (RelativeLayout.LayoutParams) timeCounterTextView.getLayoutParams();
-        counterLP.topMargin = (screenHeight / 10) - (counterLP.height/2);
+        counterLP.topMargin = (screenHeight / 10) - (counterLP.height / 2);
         counterLP.leftMargin = (screenWidth / 4) - (counterLP.width / 2);
 
         new TimerCountdown().execute();

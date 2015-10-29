@@ -9,4 +9,19 @@
 
     <!-- No -->
     <string name="no">NO</string>
+
+    <!-- Cancel -->
+    <string name="cancel">CANCELAR</string>
+
+    <!-- OK -->
+    <string name="ok">OK</string>
+
+    <!-- Enter decibel value -->
+    <string name="enter_db">Introducir el valor de decibelios</string>
+
+    <!-- Wrong decibel value -->
+    <string name="wrong_db">Valor de decibelios incorrecto</string>
+
+    <!-- Settings -->
+    <string name="settings">Ajustes</string>
 </resources>
