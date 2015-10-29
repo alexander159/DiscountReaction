@@ -101,11 +101,9 @@ public class MeasureReactionActivity extends AppCompatActivity {
             @Override
             public void run() {
                 preview.startRecording();
-
+                new TimerCountdown().execute();
             }
-        }, 50); //test
-        new TimerCountdown().execute();
-
+        }, 1000); //test
 
         //startMeterTask();
     }
