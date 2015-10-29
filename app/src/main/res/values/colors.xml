@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <color name="separator_vert_line_color">#F45D0E</color>
-
-
+    <color name="time_counter_back_color">#F36A26</color>
+    <color name="time_counter_text_color">#024FA1</color>
 </resources>

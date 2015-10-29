@@ -1,5 +1,6 @@
 package com.blogspot.alex_dev.discountreaction.activity;
 
+import android.content.Intent;
 import android.hardware.Camera;
 import android.media.MediaRecorder;
 import android.os.AsyncTask;
@@ -11,6 +12,7 @@ import android.view.animation.RotateAnimation;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
+import android.widget.TextView;
 
 import com.blogspot.alex_dev.discountreaction.R;
 import com.blogspot.alex_dev.discountreaction.util.CameraPreview;
@@ -20,6 +22,7 @@ import java.util.concurrent.TimeUnit;
 
 public class MeasureReactionActivity extends AppCompatActivity {
     private ImageView arrowImageView;
+    private TextView timeCounterTextView;
 
     private MediaRecorder mRecorder;
     private static double mEMA = 0.0;
@@ -28,7 +31,8 @@ public class MeasureReactionActivity extends AppCompatActivity {
     private boolean isMeasuring;
     private MeterArrowTask mTask;
     private float lastDegree;
-
+    private boolean isDbLevelReached;
+    private int timeLeft;
     private static final String TAG = "MeasureReactionActivity";
 
     @Override
@@ -37,8 +41,12 @@ public class MeasureReactionActivity extends AppCompatActivity {
         setContentView(R.layout.activity_measure_reaction);
 
         arrowImageView = (ImageView) findViewById(R.id.arrowImageView);
+        timeLeft = 5;
+        timeCounterTextView = (TextView) findViewById(R.id.timeCounterTextView);
+        timeCounterTextView.setText(String.valueOf(timeLeft));
 
         lastDegree = 0f;
+        isDbLevelReached = false;
         moveMeterArrow(lastDegree);
 
         // Create our Preview view and set it as the content of our activity.
@@ -47,7 +55,7 @@ public class MeasureReactionActivity extends AppCompatActivity {
         LinearLayout cameraPreviewLinLayout = (LinearLayout) findViewById(R.id.cameraPreviewLinLayout);
 
         List<Camera.Size> tmpList = preview.getCamera().getParameters().getSupportedPreviewSizes();
-        RelativeLayout.LayoutParams ll = (RelativeLayout.LayoutParams) cameraPreviewLinLayout.getLayoutParams();
+        RelativeLayout.LayoutParams cameraLP = (RelativeLayout.LayoutParams) cameraPreviewLinLayout.getLayoutParams();
         int maxWidthResolution = tmpList.get(0).width;
         int maxHeightResolution = tmpList.get(0).height;
 
@@ -58,19 +66,25 @@ public class MeasureReactionActivity extends AppCompatActivity {
 
         //calculation of best height and shift to the left
         float scale = (float) screenHeight / (float) maxHeightResolution;
-        ll.height = (int) (maxHeightResolution * scale);
-        ll.width = (int) (maxWidthResolution * scale);
+        cameraLP.height = (int) (maxHeightResolution * scale);
+        cameraLP.width = (int) (maxWidthResolution * scale);
 
         //shift to the left (center camera)
         int halfScreenWidth = screenWidth / 2;
-        int shiftPx = ll.width - halfScreenWidth;
+        int shiftPx = cameraLP.width - halfScreenWidth;
         int leftShiftPx = shiftPx / 2;  //make right and left invisible area equal size
 
-        ll.leftMargin = (leftShiftPx * -1);
+        cameraLP.leftMargin = (leftShiftPx * -1);
 
-        cameraPreviewLinLayout.setLayoutParams(ll);
+        cameraPreviewLinLayout.setLayoutParams(cameraLP);
         cameraPreviewLinLayout.addView(preview); //add camera
 
+        //center counter
+        RelativeLayout.LayoutParams counterLP = (RelativeLayout.LayoutParams) timeCounterTextView.getLayoutParams();
+        counterLP.topMargin = (screenHeight / 10) - (counterLP.height/2);
+        counterLP.leftMargin = (screenWidth / 4) - (counterLP.width / 2);
+
+        new TimerCountdown().execute();
         //startMeterTask();
     }
 
@@ -84,7 +98,6 @@ public class MeasureReactionActivity extends AppCompatActivity {
 //        super.onPause();
 //        stopRecorder();
 //    }
-
 
     private double dbToDegree(double dbVal) {
         //input val in the range -90 .. 0 (0 is the highest value)
@@ -199,5 +212,62 @@ public class MeasureReactionActivity extends AppCompatActivity {
         protected void onPostExecute(String s) {
             super.onPostExecute(s);
         }
+    }
+
+    class TimerCountdown extends AsyncTask<Void, Integer, Integer> {
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+        }
+
+        @Override
+        protected Integer doInBackground(Void... params) {
+
+            while (timeLeft >= 0) {
+                try {
+                    TimeUnit.MILLISECONDS.sleep(1000);
+                    publishProgress(timeLeft);
+                    --timeLeft;
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+
+            return ResultActivity.FAILURE;
+        }
+
+        @Override
+        protected void onProgressUpdate(Integer... values) {
+            super.onProgressUpdate(values);
+
+            timeCounterTextView.setText(String.valueOf(values[0]));
+            if (isDbLevelReached()) {
+                Intent intent = new Intent(getBaseContext(), ResultActivity.class);
+                intent.putExtra(ResultActivity.RESULT_ID, ResultActivity.SUCCESS);
+                startActivity(intent);
+                finish();
+            }
+        }
+
+        @Override
+        protected void onPostExecute(Integer value) {
+            super.onPostExecute(value);
+
+            //level success wasn't reached
+            if (!isDbLevelReached()) {
+                Intent intent = new Intent(getBaseContext(), ResultActivity.class);
+                intent.putExtra(ResultActivity.RESULT_ID, ResultActivity.FAILURE);
+                startActivity(intent);
+                finish();
+            }
+        }
+    }
+
+    public void setIsDbLevelReached(boolean isDbLevelReached) {
+        this.isDbLevelReached = isDbLevelReached;
+    }
+
+    private boolean isDbLevelReached() {
+        return isDbLevelReached;
     }
 }
