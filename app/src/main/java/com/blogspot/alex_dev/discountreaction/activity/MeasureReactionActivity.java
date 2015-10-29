@@ -21,19 +21,18 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 public class MeasureReactionActivity extends AppCompatActivity {
+    static final private double EMA_FILTER = 0.6;
+    private static final String TAG = "MeasureReactionActivity";
+    private static double mEMA = 0.0;
     private ImageView arrowImageView;
     private TextView timeCounterTextView;
-
     private MediaRecorder mRecorder;
-    private static double mEMA = 0.0;
-    static final private double EMA_FILTER = 0.6;
     private CameraPreview preview;
     private boolean isMeasuring;
     private MeterArrowTask mTask;
     private float lastDegree;
     private boolean isDbLevelReached;
     private int timeLeft;
-    private static final String TAG = "MeasureReactionActivity";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -181,6 +180,14 @@ public class MeasureReactionActivity extends AppCompatActivity {
         return mEMA;
     }
 
+    public void setIsDbLevelReached(boolean isDbLevelReached) {
+        this.isDbLevelReached = isDbLevelReached;
+    }
+
+    private boolean isDbLevelReached() {
+        return isDbLevelReached;
+    }
+
     class MeterArrowTask extends AsyncTask<Void, Integer, String> {
         @Override
         protected void onPreExecute() {
@@ -233,7 +240,7 @@ public class MeasureReactionActivity extends AppCompatActivity {
                 }
             }
 
-            return ResultActivity.FAILURE;
+            return null;
         }
 
         @Override
@@ -242,7 +249,7 @@ public class MeasureReactionActivity extends AppCompatActivity {
 
             timeCounterTextView.setText(String.valueOf(values[0]));
             if (isDbLevelReached()) {
-                Intent intent = new Intent(getBaseContext(), ResultActivity.class);
+                Intent intent = new Intent(getApplicationContext(), ResultActivity.class);
                 intent.putExtra(ResultActivity.RESULT_ID, ResultActivity.SUCCESS);
                 startActivity(intent);
                 finish();
@@ -255,19 +262,11 @@ public class MeasureReactionActivity extends AppCompatActivity {
 
             //level success wasn't reached
             if (!isDbLevelReached()) {
-                Intent intent = new Intent(getBaseContext(), ResultActivity.class);
+                Intent intent = new Intent(getApplicationContext(), ResultActivity.class);
                 intent.putExtra(ResultActivity.RESULT_ID, ResultActivity.FAILURE);
                 startActivity(intent);
                 finish();
             }
         }
-    }
-
-    public void setIsDbLevelReached(boolean isDbLevelReached) {
-        this.isDbLevelReached = isDbLevelReached;
-    }
-
-    private boolean isDbLevelReached() {
-        return isDbLevelReached;
     }
 }

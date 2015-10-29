@@ -1,3 +1,12 @@
 <resources>
     <string name="app_name">Qué harías si ganas?</string>
+
+    <!-- Save recording? -->
+    <string name="save_recording">¿Guardar grabación? </string>
+
+    <!-- Yes -->
+    <string name="yes">SI</string>
+
+    <!-- No -->
+    <string name="no">NO</string>
 </resources>

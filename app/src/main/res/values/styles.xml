@@ -10,4 +10,9 @@
         <item name="windowNoTitle">true</item>
     </style>
 
+    <style name="AppCompatAlertDialogStyle" parent="Theme.AppCompat.Light.Dialog.Alert">
+        <item name="colorAccent">#0d8df2</item>
+        <item name="android:textColorPrimary">#737373</item>
+        <item name="android:background">#fafafa</item>
+    </style>
 </resources>
