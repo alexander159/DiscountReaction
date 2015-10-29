@@ -1,6 +1,7 @@
 package com.blogspot.alex_dev.discountreaction.util;
 
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.hardware.Camera;
 import android.media.CamcorderProfile;
 import android.media.MediaRecorder;
@@ -61,6 +62,12 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
                 }
 
                 File f = new File(mediaStorageDir.getPath() + File.separator + "VID_" + timeStamp + ".mp4");
+                //save filename to preference file
+                //if user failed delete file
+                SharedPreferences sPref = getContext().getSharedPreferences(Constants.SHARED_PREF_FILENAME, Context.MODE_PRIVATE);
+                SharedPreferences.Editor ed = sPref.edit();
+                ed.putString(Constants.SHARED_PREF_SAVED_VIDEO_PATH, f.getPath());
+                ed.commit();
 
                 mrec.setOutputFile(f.getPath());
 

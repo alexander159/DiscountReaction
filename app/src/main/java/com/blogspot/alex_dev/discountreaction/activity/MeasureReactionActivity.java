@@ -4,6 +4,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.hardware.Camera;
+import android.media.AudioManager;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
@@ -51,7 +52,7 @@ public class MeasureReactionActivity extends AppCompatActivity {
         moveMeterArrow(lastDegree);
 
         SharedPreferences sPref = getSharedPreferences(Constants.SHARED_PREF_FILENAME, Context.MODE_PRIVATE);
-        dbTopValue = sPref.getInt(Constants.SHARED_PREF_DB_VALUE, -1);
+        dbTopValue = sPref.getInt(Constants.SHARED_PREF_DB_VALUE, 80);
 
         // Create our Preview view and set it as the content of our activity.
         preview = new CameraPreview(this);
@@ -96,12 +97,34 @@ public class MeasureReactionActivity extends AppCompatActivity {
         new Handler().postDelayed(new Runnable() {
             @Override
             public void run() {
+                disableAllAudio();
+
                 preview.startRecording();
                 isDbMeasuring = true;
                 new TimerCountdown().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
                 new DbMeasuringTask().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
             }
         }, 1000); //test
+    }
+
+    private void disableAllAudio() {
+        // disable sound when recording.
+        ((AudioManager) getApplicationContext().getSystemService(Context.AUDIO_SERVICE)).setStreamMute(AudioManager.STREAM_ALARM, true);
+        ((AudioManager) getApplicationContext().getSystemService(Context.AUDIO_SERVICE)).setStreamMute(AudioManager.STREAM_DTMF, true);
+        ((AudioManager) getApplicationContext().getSystemService(Context.AUDIO_SERVICE)).setStreamMute(AudioManager.STREAM_MUSIC, true);
+        ((AudioManager) getApplicationContext().getSystemService(Context.AUDIO_SERVICE)).setStreamMute(AudioManager.STREAM_RING, true);
+        ((AudioManager) getApplicationContext().getSystemService(Context.AUDIO_SERVICE)).setStreamMute(AudioManager.STREAM_SYSTEM, true);
+        ((AudioManager) getApplicationContext().getSystemService(Context.AUDIO_SERVICE)).setStreamMute(AudioManager.STREAM_VOICE_CALL, true);
+    }
+
+    private void enableAllAudio() {
+        // re-enable sound after recording.
+        ((AudioManager) getApplicationContext().getSystemService(Context.AUDIO_SERVICE)).setStreamMute(AudioManager.STREAM_ALARM, false);
+        ((AudioManager) getApplicationContext().getSystemService(Context.AUDIO_SERVICE)).setStreamMute(AudioManager.STREAM_DTMF, false);
+        ((AudioManager) getApplicationContext().getSystemService(Context.AUDIO_SERVICE)).setStreamMute(AudioManager.STREAM_MUSIC, false);
+        ((AudioManager) getApplicationContext().getSystemService(Context.AUDIO_SERVICE)).setStreamMute(AudioManager.STREAM_RING, false);
+        ((AudioManager) getApplicationContext().getSystemService(Context.AUDIO_SERVICE)).setStreamMute(AudioManager.STREAM_SYSTEM, false);
+        ((AudioManager) getApplicationContext().getSystemService(Context.AUDIO_SERVICE)).setStreamMute(AudioManager.STREAM_VOICE_CALL, false);
     }
 
     private double dbToDegree(double dbVal) {
@@ -206,6 +229,19 @@ public class MeasureReactionActivity extends AppCompatActivity {
             super.onProgressUpdate(values);
             System.out.println("Value:" + values[0]);
             moveMeterArrow(values[0]);
+
+            isDbLevelReached = ((values[0] / 2) > dbTopValue);
+
+            if (isDbLevelReached()) {
+                isDbMeasuring = false;
+                preview.stopRecording();
+                //enableAllAudio();
+
+                Intent intent = new Intent(getApplicationContext(), ResultActivity.class);
+                intent.putExtra(ResultActivity.RESULT_ID, ResultActivity.SUCCESS);
+                startActivity(intent);
+                finish();
+            }
         }
 
         @Override
@@ -238,16 +274,7 @@ public class MeasureReactionActivity extends AppCompatActivity {
         @Override
         protected void onProgressUpdate(Integer... values) {
             super.onProgressUpdate(values);
-
             timeCounterTextView.setText(String.valueOf(values[0]));
-            if (isDbLevelReached()) {
-                preview.stopRecording();
-                isDbMeasuring = false;
-                Intent intent = new Intent(getApplicationContext(), ResultActivity.class);
-                intent.putExtra(ResultActivity.RESULT_ID, ResultActivity.SUCCESS);
-                startActivity(intent);
-                finish();
-            }
         }
 
         @Override
@@ -256,8 +283,10 @@ public class MeasureReactionActivity extends AppCompatActivity {
 
             //level success wasn't reached
             if (!isDbLevelReached()) {
-                preview.stopRecording();
                 isDbMeasuring = false;
+                preview.stopRecording();
+                //enableAllAudio();
+
                 Intent intent = new Intent(getApplicationContext(), ResultActivity.class);
                 intent.putExtra(ResultActivity.RESULT_ID, ResultActivity.FAILURE);
                 startActivity(intent);
