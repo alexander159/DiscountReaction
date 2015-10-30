@@ -28,7 +28,7 @@
     <!-- Camera is not available (in use or does not exist) -->
     <string name="camera_unavailable">La cámara no está disponible (en uso o no existe)</string>
 
-    <!-- Current Value: 0 (last maximum 0) -->
-    <string name="current_decib_settings">Valor actual: 0 (último máximo 0)</string>
+    <!-- Current Value: 0 (maximum captured value 0, saved value 0) -->
+    <string name="current_decib_settings">Valor actual: 0 (último máximo 0, valor guardado 0)</string>
 
 </resources>

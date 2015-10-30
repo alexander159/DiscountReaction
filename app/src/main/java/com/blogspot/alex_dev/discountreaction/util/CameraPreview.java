@@ -90,7 +90,7 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
                 mrec.release();
                 mrec = null;
             }
-        } catch (Exception e) {
+        } catch (RuntimeException e) {
             e.printStackTrace();
         }
     }
@@ -159,7 +159,7 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
                 mrec.release();
                 mrec = null;
             }
-        } catch (IllegalStateException e) {
+        } catch (RuntimeException e) {
             e.printStackTrace();
         }
     }

@@ -19,6 +19,7 @@ import com.blogspot.alex_dev.discountreaction.R;
 import com.blogspot.alex_dev.discountreaction.util.CameraPreview;
 import com.blogspot.alex_dev.discountreaction.util.Constants;
 
+import java.io.File;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -33,6 +34,7 @@ public class MeasureReactionActivity extends AppCompatActivity {
     private int timeLeft;
     private int[] soundLevelValue;  //save sound level of all sources before muting
     private int dbTopValue;     //decibels maximum value to win
+    private boolean isActivityClosed = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -114,7 +116,17 @@ public class MeasureReactionActivity extends AppCompatActivity {
     @Override
     public void onPause() {
         super.onPause();
-        //preview.stopRecording();
+        isDbMeasuring = false;
+        timeLeft = -1;
+        preview.stopRecording();
+        isActivityClosed = true;
+
+        String filePath = getSharedPreferences(Constants.SHARED_PREF_FILENAME, Context.MODE_PRIVATE).getString(Constants.SHARED_PREF_SAVED_VIDEO_PATH, null);
+        new File(filePath).delete();
+
+        finish();
+
+        //enableAllAudio();
     }
 
     @Override
@@ -193,7 +205,9 @@ public class MeasureReactionActivity extends AppCompatActivity {
         protected String doInBackground(Void... params) {
             while (isDbMeasuring) {
                 try {
-                    publishProgress(getAmplitude());
+                    double aml = getAmplitude();
+                    publishProgress((int) Math.round((87 + (20.0 * Math.log10(aml / 32767)))));
+                    //publishProgress(getAmplitude());
                     TimeUnit.MILLISECONDS.sleep(100);
                 } catch (InterruptedException | RuntimeException e) {
                     e.printStackTrace();
@@ -209,14 +223,16 @@ public class MeasureReactionActivity extends AppCompatActivity {
 
             float aplitude = (float) values[0];
 
-            System.out.println("Value degree = " + (((float) 180 / dbTopValue) * (aplitude / 100)));
-            System.out.println("Value db = " + (int) ((aplitude / 100)));
+            //System.out.println("Value degree = " + (((float) 180 / dbTopValue) * (aplitude / 100)));
+            //System.out.println("Value db = " + (int) ((aplitude / 100)));
 
-            moveMeterArrow(((float) 180 / dbTopValue) * (aplitude / 100));
+            moveMeterArrow(aplitude * 2);
+            //moveMeterArrow(((float) 180 / dbTopValue) * (aplitude / 100));
 
-            isDbLevelReached = ((int) (aplitude / 100) >= dbTopValue);
+            //isDbLevelReached = ((int) (aplitude / 100) >= dbTopValue);
+            isDbLevelReached = ((int) aplitude >= dbTopValue);
 
-            if (isDbLevelReached()) {
+            if (isDbLevelReached() && !isActivityClosed) {
                 isDbMeasuring = false;
                 preview.stopRecording();
 
@@ -265,7 +281,7 @@ public class MeasureReactionActivity extends AppCompatActivity {
             super.onPostExecute(value);
 
             //level success wasn't reached
-            if (!isDbLevelReached()) {
+            if (!isDbLevelReached() && !isActivityClosed) {
                 isDbMeasuring = false;
                 preview.stopRecording();
 
