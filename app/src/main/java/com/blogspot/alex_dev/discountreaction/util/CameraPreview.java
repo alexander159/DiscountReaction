@@ -83,12 +83,15 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
     }
 
     public void stopRecording() {
-        if (isRecording) {
-            isRecording = false;
-            mrec.stop();
-            mrec.release();
-            //camera.release();
-            mrec = null;
+        isRecording = false;
+        try {
+            if (mrec != null) {
+                mrec.stop();
+                mrec.release();
+                mrec = null;
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 

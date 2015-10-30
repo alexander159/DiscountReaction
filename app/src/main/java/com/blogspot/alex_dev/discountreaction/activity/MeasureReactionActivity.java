@@ -2,7 +2,6 @@ package com.blogspot.alex_dev.discountreaction.activity;
 
 import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.hardware.Camera;
 import android.media.AudioManager;
 import android.os.AsyncTask;
@@ -24,8 +23,8 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 public class MeasureReactionActivity extends AppCompatActivity {
-    static final private double EMA_FILTER = 0.6;
     private static final String TAG = "MeasureReactionActivity";
+    static final private double EMA_FILTER = 0.6;
     private static double mEMA = 0.0;
     private ImageView arrowImageView;
     private TextView timeCounterTextView;
@@ -34,7 +33,7 @@ public class MeasureReactionActivity extends AppCompatActivity {
     private float lastDegree;
     private boolean isDbLevelReached;
     private int timeLeft;
-
+    private int[] soundLevelValue;  //save sound level of all sources before muting
     private int dbTopValue;     //decibels maximum value to win
 
     @Override
@@ -51,8 +50,9 @@ public class MeasureReactionActivity extends AppCompatActivity {
         isDbLevelReached = false;
         moveMeterArrow(lastDegree);
 
-        SharedPreferences sPref = getSharedPreferences(Constants.SHARED_PREF_FILENAME, Context.MODE_PRIVATE);
-        dbTopValue = sPref.getInt(Constants.SHARED_PREF_DB_VALUE, 80);
+        soundLevelValue = new int[7];
+
+        dbTopValue = getSharedPreferences(Constants.SHARED_PREF_FILENAME, Context.MODE_PRIVATE).getInt(Constants.SHARED_PREF_DB_VALUE, 80);
 
         // Create our Preview view and set it as the content of our activity.
         preview = new CameraPreview(this);
@@ -88,6 +88,8 @@ public class MeasureReactionActivity extends AppCompatActivity {
         RelativeLayout.LayoutParams counterLP = (RelativeLayout.LayoutParams) timeCounterTextView.getLayoutParams();
         counterLP.topMargin = (screenHeight / 10) - (counterLP.height / 2);
         counterLP.leftMargin = (screenWidth / 4) - (counterLP.width / 2);
+
+        disableAllAudio();
     }
 
     @Override
@@ -97,8 +99,6 @@ public class MeasureReactionActivity extends AppCompatActivity {
         new Handler().postDelayed(new Runnable() {
             @Override
             public void run() {
-                disableAllAudio();
-
                 preview.startRecording();
                 isDbMeasuring = true;
                 new TimerCountdown().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
@@ -107,24 +107,44 @@ public class MeasureReactionActivity extends AppCompatActivity {
         }, 1000); //test
     }
 
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        enableAllAudio();
+    }
+
     private void disableAllAudio() {
         // disable sound when recording.
-        ((AudioManager) getApplicationContext().getSystemService(Context.AUDIO_SERVICE)).setStreamMute(AudioManager.STREAM_ALARM, true);
-        ((AudioManager) getApplicationContext().getSystemService(Context.AUDIO_SERVICE)).setStreamMute(AudioManager.STREAM_DTMF, true);
-        ((AudioManager) getApplicationContext().getSystemService(Context.AUDIO_SERVICE)).setStreamMute(AudioManager.STREAM_MUSIC, true);
-        ((AudioManager) getApplicationContext().getSystemService(Context.AUDIO_SERVICE)).setStreamMute(AudioManager.STREAM_RING, true);
-        ((AudioManager) getApplicationContext().getSystemService(Context.AUDIO_SERVICE)).setStreamMute(AudioManager.STREAM_SYSTEM, true);
-        ((AudioManager) getApplicationContext().getSystemService(Context.AUDIO_SERVICE)).setStreamMute(AudioManager.STREAM_VOICE_CALL, true);
+        AudioManager aManager = (AudioManager) getSystemService(AUDIO_SERVICE);
+
+        soundLevelValue[0] = aManager.getStreamVolume(AudioManager.STREAM_VOICE_CALL);
+        soundLevelValue[1] = aManager.getStreamVolume(AudioManager.STREAM_SYSTEM);
+        soundLevelValue[2] = aManager.getStreamVolume(AudioManager.STREAM_RING);
+        soundLevelValue[3] = aManager.getStreamVolume(AudioManager.STREAM_MUSIC);
+        soundLevelValue[4] = aManager.getStreamVolume(AudioManager.STREAM_ALARM);
+        soundLevelValue[5] = aManager.getStreamVolume(AudioManager.STREAM_NOTIFICATION);
+        soundLevelValue[6] = aManager.getStreamVolume(AudioManager.STREAM_DTMF);
+
+        aManager.setStreamVolume(AudioManager.STREAM_VOICE_CALL, 0, AudioManager.FLAG_REMOVE_SOUND_AND_VIBRATE);
+        aManager.setStreamVolume(AudioManager.STREAM_SYSTEM, 0, AudioManager.FLAG_REMOVE_SOUND_AND_VIBRATE);
+        aManager.setStreamVolume(AudioManager.STREAM_RING, 0, AudioManager.FLAG_REMOVE_SOUND_AND_VIBRATE);
+        aManager.setStreamVolume(AudioManager.STREAM_MUSIC, 0, AudioManager.FLAG_REMOVE_SOUND_AND_VIBRATE);
+        aManager.setStreamVolume(AudioManager.STREAM_ALARM, 0, AudioManager.FLAG_REMOVE_SOUND_AND_VIBRATE);
+        aManager.setStreamVolume(AudioManager.STREAM_NOTIFICATION, 0, AudioManager.FLAG_REMOVE_SOUND_AND_VIBRATE);
+        aManager.setStreamVolume(AudioManager.STREAM_DTMF, 0, AudioManager.FLAG_REMOVE_SOUND_AND_VIBRATE);
     }
 
     public void enableAllAudio() {
         // re-enable sound after recording.
-        ((AudioManager) getApplicationContext().getSystemService(Context.AUDIO_SERVICE)).setStreamMute(AudioManager.STREAM_ALARM, false);
-        ((AudioManager) getApplicationContext().getSystemService(Context.AUDIO_SERVICE)).setStreamMute(AudioManager.STREAM_DTMF, false);
-        ((AudioManager) getApplicationContext().getSystemService(Context.AUDIO_SERVICE)).setStreamMute(AudioManager.STREAM_MUSIC, false);
-        ((AudioManager) getApplicationContext().getSystemService(Context.AUDIO_SERVICE)).setStreamMute(AudioManager.STREAM_RING, false);
-        ((AudioManager) getApplicationContext().getSystemService(Context.AUDIO_SERVICE)).setStreamMute(AudioManager.STREAM_SYSTEM, false);
-        ((AudioManager) getApplicationContext().getSystemService(Context.AUDIO_SERVICE)).setStreamMute(AudioManager.STREAM_VOICE_CALL, false);
+        AudioManager aManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
+
+        aManager.setStreamVolume(AudioManager.STREAM_VOICE_CALL, soundLevelValue[0], AudioManager.FLAG_REMOVE_SOUND_AND_VIBRATE);
+        aManager.setStreamVolume(AudioManager.STREAM_SYSTEM, soundLevelValue[1], AudioManager.FLAG_REMOVE_SOUND_AND_VIBRATE);
+        aManager.setStreamVolume(AudioManager.STREAM_RING, soundLevelValue[2], AudioManager.FLAG_REMOVE_SOUND_AND_VIBRATE);
+        aManager.setStreamVolume(AudioManager.STREAM_MUSIC, soundLevelValue[3], AudioManager.FLAG_REMOVE_SOUND_AND_VIBRATE);
+        aManager.setStreamVolume(AudioManager.STREAM_ALARM, soundLevelValue[4], AudioManager.FLAG_REMOVE_SOUND_AND_VIBRATE);
+        aManager.setStreamVolume(AudioManager.STREAM_NOTIFICATION, soundLevelValue[5], AudioManager.FLAG_REMOVE_SOUND_AND_VIBRATE);
+        aManager.setStreamVolume(AudioManager.STREAM_DTMF, soundLevelValue[6], AudioManager.FLAG_REMOVE_SOUND_AND_VIBRATE);
     }
 
     private double dbToDegree(double dbVal) {
@@ -239,8 +259,6 @@ public class MeasureReactionActivity extends AppCompatActivity {
                 Intent intent = new Intent(getApplicationContext(), ResultActivity.class);
                 intent.putExtra(ResultActivity.RESULT_ID, ResultActivity.SUCCESS);
                 startActivity(intent);
-
-                enableAllAudio();
                 finish();
             }
         }
@@ -290,8 +308,6 @@ public class MeasureReactionActivity extends AppCompatActivity {
                 Intent intent = new Intent(getApplicationContext(), ResultActivity.class);
                 intent.putExtra(ResultActivity.RESULT_ID, ResultActivity.FAILURE);
                 startActivity(intent);
-
-                enableAllAudio();
                 finish();
             }
         }

@@ -3,7 +3,6 @@ package com.blogspot.alex_dev.discountreaction.activity;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.v7.app.AlertDialog;
@@ -29,8 +28,7 @@ public class ResultActivity extends AppCompatActivity {
 
         ImageView resultImageView = (ImageView) findViewById(R.id.resultImageView);
 
-        SharedPreferences sPref = getSharedPreferences(Constants.SHARED_PREF_FILENAME, Context.MODE_PRIVATE);
-        String filePath = sPref.getString(Constants.SHARED_PREF_SAVED_VIDEO_PATH, null);
+        String filePath = getSharedPreferences(Constants.SHARED_PREF_FILENAME, Context.MODE_PRIVATE).getString(Constants.SHARED_PREF_SAVED_VIDEO_PATH, null);
         savedVideoFile = new File(filePath);
 
         Bundle extras = getIntent().getExtras();

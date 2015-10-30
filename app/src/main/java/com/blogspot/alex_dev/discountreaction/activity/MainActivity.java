@@ -22,7 +22,6 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-
         ImageButton startBtn = (ImageButton) findViewById(R.id.startBtn);
         startBtn.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -55,8 +54,7 @@ public class MainActivity extends AppCompatActivity {
                 .setPositiveButton(getString(R.string.ok), new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int id) {
                         try {
-                            SharedPreferences sPref = getSharedPreferences(Constants.SHARED_PREF_FILENAME, MODE_PRIVATE);
-                            SharedPreferences.Editor ed = sPref.edit();
+                            SharedPreferences.Editor ed = getSharedPreferences(Constants.SHARED_PREF_FILENAME, MODE_PRIVATE).edit();
                             ed.putInt(Constants.SHARED_PREF_DB_VALUE, Integer.parseInt(editText.getText().toString()));
                             ed.commit();
                         } catch (NumberFormatException e) {
