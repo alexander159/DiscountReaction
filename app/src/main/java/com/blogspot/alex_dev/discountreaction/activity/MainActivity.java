@@ -10,6 +10,7 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.EditText;
@@ -73,12 +74,14 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public void onResume() {
         super.onResume();
+        //isDbMeasuring = true;
         startRecorder();
     }
 
     @Override
     public void onPause() {
         super.onPause();
+        //isDbMeasuring = false;
         stopRecorder();
     }
 
@@ -88,21 +91,20 @@ public class MainActivity extends AppCompatActivity {
             mRecorder.setAudioSource(MediaRecorder.AudioSource.MIC);
             mRecorder.setOutputFormat(CamcorderProfile.get(CamcorderProfile.QUALITY_480P).fileFormat);
             mRecorder.setAudioEncoder(CamcorderProfile.get(CamcorderProfile.QUALITY_480P).audioCodec);
-//            mRecorder.setOutputFormat(MediaRecorder.OutputFormat.THREE_GPP);
-//            mRecorder.setAudioEncoder(MediaRecorder.AudioEncoder.AMR_NB);
+            mRecorder.setAudioSamplingRate(CamcorderProfile.get(CamcorderProfile.QUALITY_480P).audioSampleRate);
             mRecorder.setOutputFile("/dev/null");
             try {
                 mRecorder.prepare();
             } catch (java.io.IOException ioe) {
-                android.util.Log.e("[Monkey]", "IOException: " + android.util.Log.getStackTraceString(ioe));
+                Log.e("[Monkey]", "IOException: " + Log.getStackTraceString(ioe));
 
             } catch (java.lang.SecurityException e) {
-                android.util.Log.e("[Monkey]", "SecurityException: " + android.util.Log.getStackTraceString(e));
+                Log.e("[Monkey]", "SecurityException: " + Log.getStackTraceString(e));
             }
             try {
                 mRecorder.start();
             } catch (java.lang.SecurityException e) {
-                android.util.Log.e("[Monkey]", "SecurityException: " + android.util.Log.getStackTraceString(e));
+                Log.e("[Monkey]", "SecurityException: " + Log.getStackTraceString(e));
             }
         }
     }
@@ -172,10 +174,10 @@ public class MainActivity extends AppCompatActivity {
         @Override
         protected String doInBackground(Void... params) {
             while (isDbMeasuring) {
-                publishProgress((int) (getAmplitude() / 100));
                 try {
+                    publishProgress((int) (getAmplitude() / 100));
                     TimeUnit.MILLISECONDS.sleep(100);
-                } catch (InterruptedException e) {
+                } catch (InterruptedException | RuntimeException e) {
                     e.printStackTrace();
                 }
             }

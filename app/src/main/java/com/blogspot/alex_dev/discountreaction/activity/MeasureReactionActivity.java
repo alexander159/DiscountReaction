@@ -24,8 +24,6 @@ import java.util.concurrent.TimeUnit;
 
 public class MeasureReactionActivity extends AppCompatActivity {
     private static final String TAG = "MeasureReactionActivity";
-    static final private double EMA_FILTER = 0.6;
-    private static double mEMA = 0.0;
     private ImageView arrowImageView;
     private TextView timeCounterTextView;
     private CameraPreview preview;
@@ -52,7 +50,7 @@ public class MeasureReactionActivity extends AppCompatActivity {
 
         soundLevelValue = new int[7];
 
-        dbTopValue = getSharedPreferences(Constants.SHARED_PREF_FILENAME, Context.MODE_PRIVATE).getInt(Constants.SHARED_PREF_DB_VALUE, 300);
+        dbTopValue = getSharedPreferences(Constants.SHARED_PREF_FILENAME, Context.MODE_PRIVATE).getInt(Constants.SHARED_PREF_DB_VALUE, -1);
 
         // Create our Preview view and set it as the content of our activity.
         preview = new CameraPreview(this);
@@ -194,10 +192,10 @@ public class MeasureReactionActivity extends AppCompatActivity {
         @Override
         protected String doInBackground(Void... params) {
             while (isDbMeasuring) {
-                publishProgress(getAmplitude());
                 try {
+                    publishProgress(getAmplitude());
                     TimeUnit.MILLISECONDS.sleep(100);
-                } catch (InterruptedException e) {
+                } catch (InterruptedException | RuntimeException e) {
                     e.printStackTrace();
                 }
             }
@@ -212,11 +210,11 @@ public class MeasureReactionActivity extends AppCompatActivity {
             float aplitude = (float) values[0];
 
             System.out.println("Value degree = " + (((float) 180 / dbTopValue) * (aplitude / 100)));
-            System.out.println("Value db = " + (int) ((aplitude / 100) + 30));
+            System.out.println("Value db = " + (int) ((aplitude / 100)));
 
             moveMeterArrow(((float) 180 / dbTopValue) * (aplitude / 100));
 
-            isDbLevelReached = ((int) (aplitude / 100) + 30 >= dbTopValue);  //the max value in this activity lower than in main activity, +30
+            isDbLevelReached = ((int) (aplitude / 100) >= dbTopValue);
 
             if (isDbLevelReached()) {
                 isDbMeasuring = false;
