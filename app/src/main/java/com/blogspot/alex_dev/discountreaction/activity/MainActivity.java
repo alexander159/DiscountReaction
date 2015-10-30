@@ -39,6 +39,12 @@ public class MainActivity extends AppCompatActivity {
         startBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                //don't move next without entered db value
+                if (getSharedPreferences(Constants.SHARED_PREF_FILENAME, Context.MODE_PRIVATE).getInt(Constants.SHARED_PREF_DB_VALUE, -1) == -1) {
+                    Toast.makeText(getApplicationContext(), getString(R.string.enter_db), Toast.LENGTH_SHORT).show();
+                    return;
+                }
+
                 Intent intent = new Intent(getApplicationContext(), MeasureReactionActivity.class);
                 startActivity(intent);
                 finish();
@@ -58,6 +64,9 @@ public class MainActivity extends AppCompatActivity {
 
         if (getSharedPreferences(Constants.SHARED_PREF_FILENAME, Context.MODE_PRIVATE).getInt(Constants.SHARED_PREF_DB_VALUE, -1) == -1) {
             showInputDialog();
+
+            isDbMeasuring = true;
+            new DbMeasuringTask().execute();
         }
     }
 
