@@ -52,7 +52,7 @@ public class MeasureReactionActivity extends AppCompatActivity {
 
         soundLevelValue = new int[7];
 
-        dbTopValue = getSharedPreferences(Constants.SHARED_PREF_FILENAME, Context.MODE_PRIVATE).getInt(Constants.SHARED_PREF_DB_VALUE, 80);
+        dbTopValue = getSharedPreferences(Constants.SHARED_PREF_FILENAME, Context.MODE_PRIVATE).getInt(Constants.SHARED_PREF_DB_VALUE, 300);
 
         // Create our Preview view and set it as the content of our activity.
         preview = new CameraPreview(this);
@@ -108,6 +108,18 @@ public class MeasureReactionActivity extends AppCompatActivity {
     }
 
     @Override
+    public void onResume() {
+        super.onResume();
+        //preview.startRecording();
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        //preview.stopRecording();
+    }
+
+    @Override
     protected void onDestroy() {
         super.onDestroy();
         enableAllAudio();
@@ -147,12 +159,6 @@ public class MeasureReactionActivity extends AppCompatActivity {
         aManager.setStreamVolume(AudioManager.STREAM_DTMF, soundLevelValue[6], AudioManager.FLAG_REMOVE_SOUND_AND_VIBRATE);
     }
 
-    private double dbToDegree(double dbVal) {
-        //input val in the range -90 .. 0 (0 is the highest value)
-        //2 degree per each value
-        return (dbVal + 90) * 2;
-    }
-
     private void moveMeterArrow(float degree) {
         RotateAnimation animRotate = new RotateAnimation(lastDegree, degree, RotateAnimation.RELATIVE_TO_SELF, 0.5f, RotateAnimation.RELATIVE_TO_SELF, 0.5f);
         animRotate.setDuration(0);
@@ -164,56 +170,11 @@ public class MeasureReactionActivity extends AppCompatActivity {
         lastDegree = degree;
     }
 
-//    public void startRecorder() {
-//        if (mRecorder == null) {
-//            mRecorder = new MediaRecorder();
-//            mRecorder.setAudioSource(MediaRecorder.AudioSource.MIC);
-//            mRecorder.setOutputFormat(MediaRecorder.OutputFormat.THREE_GPP);
-//            mRecorder.setAudioEncoder(MediaRecorder.AudioEncoder.AMR_NB);
-//            mRecorder.setOutputFile("/dev/null");
-//            try {
-//                mRecorder.prepare();
-//            } catch (java.io.IOException ioe) {
-//                Log.e(TAG, "IOException: " + android.util.Log.getStackTraceString(ioe));
-//
-//            } catch (java.lang.SecurityException e) {
-//                Log.e(TAG, "SecurityException: " + android.util.Log.getStackTraceString(e));
-//            }
-//            try {
-//                mRecorder.start();
-//            } catch (java.lang.SecurityException e) {
-//                Log.e(TAG, "SecurityException: " + android.util.Log.getStackTraceString(e));
-//            }
-//
-//            //mEMA = 0.0;
-//        }
-//
-//    }
-//
-//    public void stopRecorder() {
-//        if (mRecorder != null) {
-//            mRecorder.stop();
-//            mRecorder.release();
-//            mRecorder = null;
-//        }
-//    }
-
-    public double soundDb(double ampl) {
-        //return  20 * Math.log10(getAmplitudeEMA() / ampl);
-        return 20 * Math.log10(getAmplitude() / ampl);
-    }
-
-    public double getAmplitude() {
+    public int getAmplitude() {
         if (preview.getMediaRecorder() != null)
             return (preview.getMediaRecorder().getMaxAmplitude());
         else
             return 0;
-    }
-
-    public double getAmplitudeEMA() {
-        double amp = getAmplitude();
-        mEMA = EMA_FILTER * amp + (1.0 - EMA_FILTER) * mEMA;
-        return mEMA;
     }
 
     public void setIsDbLevelReached(boolean isDbLevelReached) {
@@ -233,7 +194,7 @@ public class MeasureReactionActivity extends AppCompatActivity {
         @Override
         protected String doInBackground(Void... params) {
             while (isDbMeasuring) {
-                publishProgress((int) (dbToDegree(soundDb(65535.0))));
+                publishProgress(getAmplitude());
                 try {
                     TimeUnit.MILLISECONDS.sleep(100);
                 } catch (InterruptedException e) {
@@ -247,10 +208,15 @@ public class MeasureReactionActivity extends AppCompatActivity {
         @Override
         protected void onProgressUpdate(Integer... values) {
             super.onProgressUpdate(values);
-            System.out.println("Value:" + values[0]);
-            moveMeterArrow(values[0]);
 
-            isDbLevelReached = ((values[0] / 2) > dbTopValue);
+            float aplitude = (float) values[0];
+
+            System.out.println("Value degree = " + (((float) 180 / dbTopValue) * (aplitude / 100)));
+            System.out.println("Value db = " + (int) ((aplitude / 100) + 30));
+
+            moveMeterArrow(((float) 180 / dbTopValue) * (aplitude / 100));
+
+            isDbLevelReached = ((int) (aplitude / 100) + 30 >= dbTopValue);  //the max value in this activity lower than in main activity, +30
 
             if (isDbLevelReached()) {
                 isDbMeasuring = false;

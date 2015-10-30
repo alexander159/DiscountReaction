@@ -12,7 +12,7 @@
         android:id="@+id/currentDbTextView"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:textSize="15sp" />
+        android:textSize="25sp" />
 
     <EditText
         android:id="@+id/editText"
@@ -20,5 +20,5 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="10dp"
         android:inputType="numberDecimal"
-        android:textSize="15sp" />
+        android:textSize="25sp" />
 </LinearLayout>
