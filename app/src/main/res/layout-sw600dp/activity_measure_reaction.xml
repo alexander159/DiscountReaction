@@ -13,13 +13,13 @@
 
     <TextView
         android:id="@+id/timeCounterTextView"
-        android:layout_width="120dp"
-        android:layout_height="120dp"
+        android:layout_width="90px"
+        android:layout_height="90px"
         android:background="@drawable/circle"
         android:gravity="center"
         android:text="5"
         android:textColor="@color/time_counter_text_color"
-        android:textSize="100sp" />
+        android:textSize="65px" />
 
     <View
         android:id="@+id/separatorView"
@@ -44,12 +44,12 @@
     <ImageView
         android:id="@+id/meterImageView"
         android:layout_width="wrap_content"
-        android:layout_height="410dp"
+        android:layout_height="308px"
         android:layout_alignEnd="@+id/rightBackImageView"
         android:layout_alignParentBottom="true"
         android:layout_alignRight="@+id/rightBackImageView"
-        android:layout_marginLeft="5dp"
-        android:layout_marginStart="5dp"
+        android:layout_marginLeft="4px"
+        android:layout_marginStart="4px"
         android:layout_toEndOf="@+id/separatorView"
         android:layout_toRightOf="@+id/separatorView"
         android:scaleType="centerCrop"
@@ -57,13 +57,13 @@
 
     <ImageView
         android:id="@+id/arrowImageView"
-        android:layout_width="552dp"
-        android:layout_height="48dp"
+        android:layout_width="414px"
+        android:layout_height="36px"
         android:layout_alignEnd="@+id/rightBackImageView"
         android:layout_alignParentBottom="true"
         android:layout_alignRight="@+id/rightBackImageView"
-        android:layout_marginEnd="65dp"
-        android:layout_marginRight="63dp"
+        android:layout_marginEnd="47px"
+        android:layout_marginRight="47px"
         android:scaleType="fitCenter"
         android:src="@drawable/screen02_meter_arrow_full" />
 </RelativeLayout>

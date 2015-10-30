@@ -14,11 +14,11 @@
 
     <ImageButton
         android:id="@+id/startBtn"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width="330px"
+        android:layout_height="287px"
         android:layout_alignParentBottom="true"
         android:layout_centerHorizontal="true"
-        android:layout_marginBottom="200dp"
+        android:layout_marginBottom="100px"
         android:background="@drawable/btn_start_selector" />
 
     <TextView
@@ -27,9 +27,9 @@
         android:layout_height="wrap_content"
         android:layout_alignBottom="@+id/startBtn"
         android:layout_centerHorizontal="true"
-        android:layout_marginBottom="-70dp"
+        android:layout_marginBottom="-60px"
         android:fontFamily="sans-serif-light"
         android:text="@string/settings"
         android:textColor="@android:color/white"
-        android:textSize="30sp" />
+        android:textSize="25px" />
 </RelativeLayout>

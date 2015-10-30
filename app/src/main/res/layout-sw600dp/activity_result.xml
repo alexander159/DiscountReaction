@@ -14,8 +14,8 @@
 
     <ImageView
         android:id="@+id/resultImageView"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width="611px"
+        android:layout_height="341px"
         android:layout_centerHorizontal="true"
         android:layout_centerVertical="true" />
 </RelativeLayout>
