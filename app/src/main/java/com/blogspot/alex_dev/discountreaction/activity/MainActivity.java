@@ -128,7 +128,12 @@ public class MainActivity extends AppCompatActivity {
                     public void onClick(DialogInterface dialog, int id) {
                         try {
                             SharedPreferences.Editor ed = getSharedPreferences(Constants.SHARED_PREF_FILENAME, MODE_PRIVATE).edit();
-                            ed.putInt(Constants.SHARED_PREF_DB_VALUE, Integer.parseInt(editText.getText().toString()));
+
+                            if (Integer.parseInt(editText.getText().toString()) > 327) {
+                                ed.putInt(Constants.SHARED_PREF_DB_VALUE, 327);
+                            } else {
+                                ed.putInt(Constants.SHARED_PREF_DB_VALUE, Integer.parseInt(editText.getText().toString()));
+                            }
                             ed.commit();
 
                             isDbMeasuring = false;
@@ -176,7 +181,7 @@ public class MainActivity extends AppCompatActivity {
                 lastHighestDbValue = values[0];
             }
 
-            currentDbTextView.setText(String.format("CurrentValue: %s (last maximum %s)", values[0], lastHighestDbValue));
+            currentDbTextView.setText(String.format("Valor actual: %s (último máximo %s)", values[0], lastHighestDbValue));
         }
 
         @Override
