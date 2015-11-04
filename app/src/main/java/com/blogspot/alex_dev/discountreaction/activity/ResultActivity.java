@@ -79,6 +79,7 @@ public class ResultActivity extends AppCompatActivity {
                 .setCancelable(false);
 
         AlertDialog dialog = builder.create();
+        dialog.getWindow().clearFlags(WindowManager.LayoutParams.FLAG_DIM_BEHIND);  //disable backgrounds dimming
 
         DisplayMetrics metrics = new DisplayMetrics();
         getWindowManager().getDefaultDisplay().getMetrics(metrics);
