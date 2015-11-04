@@ -7,6 +7,9 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
+import android.util.DisplayMetrics;
+import android.view.Gravity;
+import android.view.WindowManager;
 import android.widget.ImageView;
 
 import com.blogspot.alex_dev.discountreaction.R;
@@ -27,9 +30,7 @@ public class ResultActivity extends AppCompatActivity {
         setContentView(R.layout.activity_result);
 
         ImageView resultImageView = (ImageView) findViewById(R.id.resultImageView);
-
-        String filePath = getSharedPreferences(Constants.SHARED_PREF_FILENAME, Context.MODE_PRIVATE).getString(Constants.SHARED_PREF_SAVED_VIDEO_PATH, null);
-        savedVideoFile = new File(filePath);
+        savedVideoFile = new File(getSharedPreferences(Constants.SHARED_PREF_FILENAME, Context.MODE_PRIVATE).getString(Constants.SHARED_PREF_SAVED_VIDEO_PATH, null));
 
         Bundle extras = getIntent().getExtras();
         if (extras != null) {
@@ -37,13 +38,7 @@ public class ResultActivity extends AppCompatActivity {
 
             if (resCode == SUCCESS) {
                 resultImageView.setImageResource(R.drawable.screen03_text_succes);
-
-                new Handler().postDelayed(new Runnable() {
-                    @Override
-                    public void run() {
-                        showSaveRecordingDialog();
-                    }
-                }, 2000);   //show result screen during 2 sec
+                showSaveRecordingDialog();
             } else if (resCode == FAILURE) {
                 resultImageView.setImageResource(R.drawable.screen03_text_failure);
                 savedVideoFile.delete();
@@ -81,7 +76,18 @@ public class ResultActivity extends AppCompatActivity {
                         finish();
                     }
                 })
-                .setCancelable(false)
-                .show();
+                .setCancelable(false);
+
+        AlertDialog dialog = builder.create();
+
+        DisplayMetrics metrics = new DisplayMetrics();
+        getWindowManager().getDefaultDisplay().getMetrics(metrics);
+
+        WindowManager.LayoutParams wmlp = dialog.getWindow().getAttributes();
+
+        wmlp.gravity = Gravity.TOP | Gravity.CENTER_HORIZONTAL;
+        wmlp.y = metrics.heightPixels - wmlp.height - metrics.heightPixels / 10;   //y position
+
+        dialog.show();
     }
 }

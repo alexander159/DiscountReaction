@@ -37,7 +37,7 @@ public class MainActivity extends AppCompatActivity {
 
         lastHighestDbValue = 0;
 
-        savedValue = getSharedPreferences(Constants.SHARED_PREF_FILENAME, Context.MODE_PRIVATE).getInt(Constants.SHARED_PREF_DB_VALUE, -1);
+        savedValue = getSharedPreferences(Constants.SHARED_PREF_FILENAME, Context.MODE_PRIVATE).getInt(Constants.SHARED_PREF_TOP_DB_VALUE, -1);
 
         ImageButton startBtn = (ImageButton) findViewById(R.id.startBtn);
         startBtn.setOnClickListener(new View.OnClickListener() {
@@ -45,7 +45,7 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View v) {
                 //read new information from the preferences
                 //don't move next without entered db value
-                if (getSharedPreferences(Constants.SHARED_PREF_FILENAME, Context.MODE_PRIVATE).getInt(Constants.SHARED_PREF_DB_VALUE, -1) == -1) {
+                if (getSharedPreferences(Constants.SHARED_PREF_FILENAME, Context.MODE_PRIVATE).getInt(Constants.SHARED_PREF_TOP_DB_VALUE, -1) == -1) {
                     Toast.makeText(getApplicationContext(), getString(R.string.enter_db), Toast.LENGTH_SHORT).show();
                     return;
                 }
@@ -150,9 +150,9 @@ public class MainActivity extends AppCompatActivity {
                             SharedPreferences.Editor ed = getSharedPreferences(Constants.SHARED_PREF_FILENAME, MODE_PRIVATE).edit();
 
                             if (Integer.parseInt(editText.getText().toString()) >= 100 && lastHighestDbValue < 100) {
-                                ed.putInt(Constants.SHARED_PREF_DB_VALUE, 100);
+                                ed.putInt(Constants.SHARED_PREF_TOP_DB_VALUE, 100);
                             } else {
-                                ed.putInt(Constants.SHARED_PREF_DB_VALUE, Integer.parseInt(editText.getText().toString()));
+                                ed.putInt(Constants.SHARED_PREF_TOP_DB_VALUE, Integer.parseInt(editText.getText().toString()));
                             }
                             ed.commit();
 
@@ -184,12 +184,7 @@ public class MainActivity extends AppCompatActivity {
         protected String doInBackground(Void... params) {
             while (isDbMeasuring) {
                 try {
-                    double aml = getAmplitude();
-                    //System.out.println("db = " + (87 + (20.0*Math.log10(aml / 32767))) );
-                    //+ " aml/100=" + (int) (aml / 100)
-
-                    // publishProgress((int) (aml / 100));
-                    publishProgress((int) Math.round((87 + (20.0 * Math.log10(aml / 32767)))));
+                    publishProgress((int) Math.round((87 + (20.0 * Math.log10(getAmplitude() / 32767)))));
                     TimeUnit.MILLISECONDS.sleep(100);
                 } catch (InterruptedException | RuntimeException e) {
                     e.printStackTrace();

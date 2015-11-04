@@ -21,9 +21,9 @@ import java.util.Date;
 public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback {
     private static final String TAG = "CameraPreview";
     public MediaRecorder mrec;
+    private Camera camera;
     private boolean isRecording;
     private SurfaceHolder surfaceHolder;
-    private Camera camera;
 
     public CameraPreview(Context context) {
         super(context);

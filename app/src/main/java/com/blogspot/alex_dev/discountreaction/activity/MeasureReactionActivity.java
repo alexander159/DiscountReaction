@@ -19,7 +19,6 @@ import com.blogspot.alex_dev.discountreaction.R;
 import com.blogspot.alex_dev.discountreaction.util.CameraPreview;
 import com.blogspot.alex_dev.discountreaction.util.Constants;
 
-import java.io.File;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -29,12 +28,12 @@ public class MeasureReactionActivity extends AppCompatActivity {
     private TextView timeCounterTextView;
     private CameraPreview preview;
     private boolean isDbMeasuring;
-    private float lastDegree;
+    private float lastMeterDegree;
     private boolean isDbLevelReached;
-    private int timeLeft;
+    private boolean isApplicationInterrupted;
+    private int dbTopValue;     //decibel maximum value to win
+    private int secondsLeft;
     private int[] soundLevelValue;  //save sound level of all sources before muting
-    private int dbTopValue;     //decibels maximum value to win
-    private boolean isActivityClosed = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -42,23 +41,23 @@ public class MeasureReactionActivity extends AppCompatActivity {
         setContentView(R.layout.activity_measure_reaction);
 
         arrowImageView = (ImageView) findViewById(R.id.arrowImageView);
-        timeLeft = 5;
         timeCounterTextView = (TextView) findViewById(R.id.timeCounterTextView);
-        timeCounterTextView.setText(String.valueOf(timeLeft));
+        LinearLayout cameraPreviewLinLayout = (LinearLayout) findViewById(R.id.cameraPreviewLinLayout);
 
-        lastDegree = 0f;
+
+        secondsLeft = 5;
+        timeCounterTextView.setText(String.valueOf(secondsLeft));
+
+        dbTopValue = getSharedPreferences(Constants.SHARED_PREF_FILENAME, Context.MODE_PRIVATE).getInt(Constants.SHARED_PREF_TOP_DB_VALUE, -1);
         isDbLevelReached = false;
-        moveMeterArrow(lastDegree);
+        lastMeterDegree = 0f;
+        moveMeterArrow(lastMeterDegree);
 
         soundLevelValue = new int[7];
-
-        dbTopValue = getSharedPreferences(Constants.SHARED_PREF_FILENAME, Context.MODE_PRIVATE).getInt(Constants.SHARED_PREF_DB_VALUE, -1);
+        isApplicationInterrupted = false;
 
         // Create our Preview view and set it as the content of our activity.
         preview = new CameraPreview(this);
-
-        LinearLayout cameraPreviewLinLayout = (LinearLayout) findViewById(R.id.cameraPreviewLinLayout);
-
         List<Camera.Size> tmpList = preview.getCamera().getParameters().getSupportedPreviewSizes();
         RelativeLayout.LayoutParams cameraLP = (RelativeLayout.LayoutParams) cameraPreviewLinLayout.getLayoutParams();
         int maxWidthResolution = tmpList.get(0).width;
@@ -69,11 +68,10 @@ public class MeasureReactionActivity extends AppCompatActivity {
         int screenWidth = metrics.widthPixels;
         int screenHeight = metrics.heightPixels;
 
-        //calculation of best height and shift to the left
+        //calculation of the best height and shift to the left
         float scale = (float) screenHeight / (float) maxHeightResolution;
         cameraLP.height = (int) (maxHeightResolution * scale);
         cameraLP.width = (int) (maxWidthResolution * scale);
-
         //shift to the left (center camera)
         int halfScreenWidth = screenWidth / 2;
         int shiftPx = cameraLP.width - halfScreenWidth;
@@ -84,17 +82,16 @@ public class MeasureReactionActivity extends AppCompatActivity {
         cameraPreviewLinLayout.setLayoutParams(cameraLP);
         cameraPreviewLinLayout.addView(preview); //add camera
 
-        //center counter
+        //center time counter
         RelativeLayout.LayoutParams counterLP = (RelativeLayout.LayoutParams) timeCounterTextView.getLayoutParams();
         counterLP.topMargin = (screenHeight / 10) - (counterLP.height / 2);
         counterLP.leftMargin = (screenWidth / 4) - (counterLP.width / 2);
-
-        disableAllAudio();
     }
 
     @Override
     protected void onStart() {
         super.onStart();
+        disableAllAudio();
 
         new Handler().postDelayed(new Runnable() {
             @Override
@@ -102,31 +99,30 @@ public class MeasureReactionActivity extends AppCompatActivity {
                 preview.startRecording();
                 isDbMeasuring = true;
                 new TimerCountdown().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
-                new DbMeasuringTask().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+                new DecibelMeasuringTask().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
             }
-        }, 1000); //test
+        }, 1000);
     }
 
     @Override
     public void onResume() {
         super.onResume();
-        //preview.startRecording();
     }
 
     @Override
     public void onPause() {
         super.onPause();
-        isDbMeasuring = false;
-        timeLeft = -1;
+
+        isApplicationInterrupted = true;
         preview.stopRecording();
-        isActivityClosed = true;
+        isDbMeasuring = false;
+        secondsLeft = -1;
 
-        String filePath = getSharedPreferences(Constants.SHARED_PREF_FILENAME, Context.MODE_PRIVATE).getString(Constants.SHARED_PREF_SAVED_VIDEO_PATH, null);
-        new File(filePath).delete();
+        //String filePath = getSharedPreferences(Constants.SHARED_PREF_FILENAME, Context.MODE_PRIVATE).getString(Constants.SHARED_PREF_SAVED_VIDEO_PATH, null);
+        //new File(filePath).delete();
 
+        enableAllAudio();
         finish();
-
-        //enableAllAudio();
     }
 
     @Override
@@ -170,32 +166,24 @@ public class MeasureReactionActivity extends AppCompatActivity {
     }
 
     private void moveMeterArrow(float degree) {
-        RotateAnimation animRotate = new RotateAnimation(lastDegree, degree, RotateAnimation.RELATIVE_TO_SELF, 0.5f, RotateAnimation.RELATIVE_TO_SELF, 0.5f);
+        RotateAnimation animRotate = new RotateAnimation(lastMeterDegree, degree, RotateAnimation.RELATIVE_TO_SELF, 0.5f, RotateAnimation.RELATIVE_TO_SELF, 0.5f);
         animRotate.setDuration(0);
         animRotate.setFillEnabled(true);
         animRotate.setFillAfter(true);
 
+        lastMeterDegree = degree;
         arrowImageView.startAnimation(animRotate);
-
-        lastDegree = degree;
     }
 
     public int getAmplitude() {
-        if (preview.getMediaRecorder() != null)
+        if (preview.getMediaRecorder() != null) {
             return (preview.getMediaRecorder().getMaxAmplitude());
-        else
+        } else {
             return 0;
+        }
     }
 
-    public void setIsDbLevelReached(boolean isDbLevelReached) {
-        this.isDbLevelReached = isDbLevelReached;
-    }
-
-    private boolean isDbLevelReached() {
-        return isDbLevelReached;
-    }
-
-    class DbMeasuringTask extends AsyncTask<Void, Integer, String> {
+    class DecibelMeasuringTask extends AsyncTask<Void, Integer, String> {
         @Override
         protected void onPreExecute() {
             super.onPreExecute();
@@ -205,9 +193,7 @@ public class MeasureReactionActivity extends AppCompatActivity {
         protected String doInBackground(Void... params) {
             while (isDbMeasuring) {
                 try {
-                    double aml = getAmplitude();
-                    publishProgress((int) Math.round((87 + (20.0 * Math.log10(aml / 32767)))));
-                    //publishProgress(getAmplitude());
+                    publishProgress((int) Math.round((87 + (20.0 * Math.log10((double) getAmplitude() / 32767)))));
                     TimeUnit.MILLISECONDS.sleep(100);
                 } catch (InterruptedException | RuntimeException e) {
                     e.printStackTrace();
@@ -218,28 +204,13 @@ public class MeasureReactionActivity extends AppCompatActivity {
         }
 
         @Override
-        protected void onProgressUpdate(Integer... values) {
-            super.onProgressUpdate(values);
+        protected void onProgressUpdate(Integer... amplitude) {
+            super.onProgressUpdate(amplitude);
 
-            float aplitude = (float) values[0];
+            moveMeterArrow(amplitude[0] * 2);   //1 decibel == 2 degree on meter
 
-            //System.out.println("Value degree = " + (((float) 180 / dbTopValue) * (aplitude / 100)));
-            //System.out.println("Value db = " + (int) ((aplitude / 100)));
-
-            moveMeterArrow(aplitude * 2);
-            //moveMeterArrow(((float) 180 / dbTopValue) * (aplitude / 100));
-
-            //isDbLevelReached = ((int) (aplitude / 100) >= dbTopValue);
-            isDbLevelReached = ((int) aplitude >= dbTopValue);
-
-            if (isDbLevelReached() && !isActivityClosed) {
-                isDbMeasuring = false;
-                preview.stopRecording();
-
-                Intent intent = new Intent(getApplicationContext(), ResultActivity.class);
-                intent.putExtra(ResultActivity.RESULT_ID, ResultActivity.SUCCESS);
-                startActivity(intent);
-                finish();
+            if (!isDbLevelReached) {
+                isDbLevelReached = (amplitude[0] >= dbTopValue);
             }
         }
 
@@ -257,11 +228,10 @@ public class MeasureReactionActivity extends AppCompatActivity {
 
         @Override
         protected Integer doInBackground(Void... params) {
-            while (timeLeft >= 0) {
+            while (secondsLeft >= 0) {
                 try {
+                    publishProgress(secondsLeft--);
                     TimeUnit.MILLISECONDS.sleep(1000);
-                    publishProgress(timeLeft);
-                    --timeLeft;
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
@@ -271,22 +241,29 @@ public class MeasureReactionActivity extends AppCompatActivity {
         }
 
         @Override
-        protected void onProgressUpdate(Integer... values) {
-            super.onProgressUpdate(values);
-            timeCounterTextView.setText(String.valueOf(values[0]));
+        protected void onProgressUpdate(Integer... seconds) {
+            super.onProgressUpdate(seconds);
+            timeCounterTextView.setText(String.valueOf(seconds[0]));
         }
 
         @Override
         protected void onPostExecute(Integer value) {
             super.onPostExecute(value);
 
-            //level success wasn't reached
-            if (!isDbLevelReached() && !isActivityClosed) {
+            if (!isDbLevelReached && !isApplicationInterrupted) {
                 isDbMeasuring = false;
                 preview.stopRecording();
 
                 Intent intent = new Intent(getApplicationContext(), ResultActivity.class);
                 intent.putExtra(ResultActivity.RESULT_ID, ResultActivity.FAILURE);
+                startActivity(intent);
+                finish();
+            } else if (isDbLevelReached && !isApplicationInterrupted) {
+                isDbMeasuring = false;
+                preview.stopRecording();
+
+                Intent intent = new Intent(getApplicationContext(), ResultActivity.class);
+                intent.putExtra(ResultActivity.RESULT_ID, ResultActivity.SUCCESS);
                 startActivity(intent);
                 finish();
             }
